@@ -1,169 +1,169 @@
-org 7e00h
+org 7e00h                   ; Set the origin of the code to memory address 7e00h
 
 section .text
-    global _start
+    global _start           ; Entry point for the program
 
 _start:
-    call    reset_memory
-    xor     sp, sp
+    call    reset_memory    ; Call the function to reset memory
+    xor     sp, sp          ; Clear the stack pointer
 
     ; print options listing string
 
-    call    get_cursor_pos
+    call    get_cursor_pos  ; Call function to get cursor position
 
-    mov     ax, 0
-    mov     es, ax
-    mov     bp, opt_str
+    mov     ax, 0           ; Set AX register to 0
+    mov     es, ax          ; Set ES (Extra Segment) register to 0
+    mov     bp, opt_str     ; Set BP register to point to opt_str (options listing string)
 
-    mov     bl, 07h
-    mov     cx, opt_len
+    mov     bl, 07h         ; Set BL register for display attribute (color)
+    mov     cx, opt_len     ; Set CX register to opt_len (length of the options string)
 
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 1301h       ; Set up AH for BIOS video scroll function
+    int     10h             ; Call BIOS interrupt 10h to display the options
 
-    mov     ah, 0eh
-    mov     al, 3ah
-    int     10h
+    mov     ah, 0eh         ; Set up AH register for BIOS teletype output
+    mov     al, 3ah         ; Set AL register to ASCII character ':'
+    int     10h             ; Print the character
 
-    mov     al, 20h
-    int     10h
+    mov     al, 20h         ; Set AL register to ASCII character ' '
+    int     10h             ; Print a space character
 
     ; read user's choice
 
-    mov     ah, 00h
-    int     16h
+    mov     ah, 00h         ; Set AH register for BIOS keyboard input function
+    int     16h             ; Call BIOS interrupt 16h to read a character from keyboard
 
     ; execute chosen operation
 
-    cmp     al, '1'
-    je      option1
+    cmp     al, '1'         ; Compare the entered character with '1'
+    je      option1         ; Jump to label 'option1' if equal
 
-    cmp     al, '2'
-    je      option2
+    cmp     al, '2'         ; Compare the entered character with '2'
+    je      option2         ; Jump to label 'option2' if equal
 
-    cmp     al, '3'
-    je      option3
+    cmp     al, '3'         ; Compare the entered character with '3'
+    je      option3         ; Jump to label 'option3' if equal
 
-    jmp     _error
+    jmp     _error          ; Jump to label '_error' if none of the options match
 
 ; 2.1 BEGINNING
 
 option1:
     ; display the key read
 
-    mov     ah, 0eh
-    int     10h
+    mov     ah, 0eh       ; Set up AH register for BIOS teletype output
+    int     10h           ; Print the character in AL (previously read)
 
-    mov     al, 2eh
-    int     10h
+    mov     al, 2eh       ; Set AL register to ASCII character '.'
+    int     10h           ; Print the character
 
     ; print "STRING = "
 
-    call    get_cursor_pos
+    call    get_cursor_pos ; Call function to get cursor position
 
-    inc     dh
-    mov     dl, 0
+    inc     dh            ; Increment DH (row position)
+    mov     dl, 0         ; Set DL (column position) to 0
 
-    mov     ax, 0
-    mov     es, ax
-    mov     bp, in_awaits_str1
+    mov     ax, 0         ; Set AX register to 0
+    mov     es, ax        ; Set ES (Extra Segment) register to 0
+    mov     bp, in_awaits_str1  ; Set BP register to point to in_awaits_str1
 
-    mov     bl, 07h
-    mov     cx, str1_awaits_len1
+    mov     bl, 07h       ; Set BL register for display attribute (color)
+    mov     cx, str1_awaits_len1 ; Set CX register to str1_awaits_len1 (length of the string)
 
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 1301h     ; Set up AH for BIOS video scroll function
+    int     10h           ; Call BIOS interrupt 10h to display "STRING = "
 
     ; read user input (str)
 
-    call    read_input
+    call    read_input    ; Call function to read user input
 
     ; save the string to its own buffer
 
-    mov     si, storage_buffer
-    mov     di, string
+    mov     si, storage_buffer ; Set SI to point to storage_buffer
+    mov     di, string    ; Set DI to point to string buffer
 
     char_copy_loop:
-        mov     al, [si]
-        mov     [di], al
-        inc     si
-        inc     di
+         mov     al, [si]        ; Move the byte from address pointed by SI to AL
+         mov     [di], al        ; Move the byte in AL to the address pointed by DI
+         inc     si              ; Increment SI
+         inc     di              ; Increment DI
 
-        cmp     byte [si], 0
-        jne     char_copy_loop
+         cmp     byte [si], 0    ; Compare the byte at SI with 0 (end of string marker)
+         jne     char_copy_loop  ; Jump back to char_copy_loop if not end of string
 
-    ; print "N = "
+         ; print "N = "
 
-    call    get_cursor_pos
+         call    get_cursor_pos  ; Get cursor position
 
-    inc     dh
-    mov     dl, 0
+         inc     dh              ; Increment DH (row position)
+         mov     dl, 0           ; Set DL (column position) to 0
 
-    mov     ax, 0
-    mov     es, ax
-    mov     si, in_awaits_str1
-    add     si, str1_awaits_len1
-    mov     bp, si
+         mov     ax, 0           ; Set AX register to 0
+         mov     es, ax          ; Set ES (Extra Segment) register to 0
+         mov     si, in_awaits_str1 ; Set SI to point to in_awaits_str1
+         add     si, str1_awaits_len1 ; Point SI to the end of in_awaits_str1
+         mov     bp, si          ; Set BP to point to the end of in_awaits_str1
 
-    mov     bl, 07h
-    mov     cx, str1_awaits_len2
+         mov     bl, 07h         ; Set BL register for display attribute (color)
+         mov     cx, str1_awaits_len2 ; Set CX register to str1_awaits_len2 (length of the string)
 
-    mov     ax, 1301h
-    int     10h
+         mov     ax, 1301h       ; Set up AH for BIOS video scroll function
+         int     10h             ; Call BIOS interrupt 10h to print "N = "
 
-    ; read user input (n)
+         ; read user input (n)
 
-    call    read_input
+         call    read_input      ; Call function to read user input
 
-    ; convert ascii read to an integer
+         ; convert ascii read to an integer
 
-    mov     di, nhts
-    mov     si, storage_buffer
-    call    atoi
+         mov     di, nhts        ; Set DI to point to nhts
+         mov     si, storage_buffer ; Set SI to point to storage_buffer
+         call    atoi            ; Convert ASCII characters to integer
 
-    ; read HTS
+         ; read HTS
 
-    call    read_hts_address
+         call    read_hts_address ; Call function to read HTS address
 
-    ; prepare writing buffer
+         ; prepare writing buffer
 
-    mov     si, string
-    call    fill_storage_buffer
-    
-    ; calculate the number of sectors to write
+         mov     si, string      ; Set SI to point to string
+         call    fill_storage_buffer ; Call function to fill storage buffer
 
-    xor     dx, dx
-    mov     ax, [storage_curr_size]
-    mov     bx, 512
-    div     bx
+         ; calculate the number of sectors to write
 
-    ; write to the floppy
+         xor     dx, dx          ; Clear DX register
+         mov     ax, [storage_curr_size] ; Move value from storage_curr_size to AX
+         mov     bx, 512         ; Set BX to 512 (sector size)
+         div     bx              ; Divide AX by BX, quotient in AX, remainder in DX
 
-    push    ax
+         ; write to the floppy
 
-    mov     ax, 0
-	mov     es, ax
-    mov     bx, storage_buffer
+         push    ax              ; Save AX on the stack
 
-    pop     ax
+         mov     ax, 0           ; Clear AX register
+	 mov     es, ax          ; Set ES register to 0 (clears ES)
+   	 mov     bx, storage_buffer ; Set BX to point to storage_buffer
 
-    mov     ah, 03h
-    inc     al
-    mov     ch, [nhts + 4]
-    mov     cl, [nhts + 6]
-    mov     dh, [nhts + 2]
-    mov     dl, 0
+    	 pop     ax              ; Restore AX from the stack
 
-    int     13h
+    	 mov     ah, 03h         ; Set up AH register for BIOS Write Sector
+	 inc     al              ; Increment AL
+    	 mov     ch, [nhts + 4] ; Set CH to nhts + 4
+   	 mov     cl, [nhts + 6] ; Set CL to nhts + 6
+   	 mov     dh, [nhts + 2] ; Set DH to nhts + 2
+ 	 mov     dl, 0           ; Set DL to 0
 
-    ; print error code
+    	 int     13h             ; Call BIOS interrupt 13h to write sectors
+
+   	    ; print error code
     
     call    display_error_code
 
     ; print string read
 
-    mov     si, string
-    call    print_buff
+    mov     si, string     ; Set SI to point to string
+    call    print_buff 
 
     jmp     _terminate
 
@@ -172,62 +172,62 @@ option1:
 option2:
     ; display the key read
 
-    mov     ah, 0eh
-    int     10h
+    mov     ah, 0eh       ; Set up AH register for BIOS teletype output
+    int     10h           ; Print the character in AL (previously read)
 
-    mov     al, 2eh
-    int     10h
+    mov     al, 2eh       ; Set AL register to ASCII character '.'
+    int     10h           ; Print the character
 
     ; read RAM address XXXX:YYYY "
 
-    call    read_ram_address
+    call    read_ram_address  ; Call function to read RAM address
 
     ; read HTS
 
-    call    read_hts_address
+    call    read_hts_address  ; Call function to read HTS address
 
     ; print "N = "
 
-    call    get_cursor_pos
+    call    get_cursor_pos    ; Get cursor position
 
-    inc     dh
-    mov     dl, 0
+    inc     dh              ; Increment DH (row position)
+    mov     dl, 0           ; Set DL (column position) to 0
 
-    mov     ax, 0
-    mov     es, ax
-    mov     si, in_awaits_str1
-    add     si, str1_awaits_len1
-    mov     bp, si
+    mov     ax, 0           ; Set AX register to 0
+    mov     es, ax          ; Set ES (Extra Segment) register to 0
+    mov     si, in_awaits_str1 ; Set SI to point to in_awaits_str1
+    add     si, str1_awaits_len1 ; Point SI to the end of in_awaits_str1
+    mov     bp, si          ; Set BP to point to the end of in_awaits_str1
 
-    mov     bl, 07h
-    mov     cx, str1_awaits_len2
+    mov     bl, 07h         ; Set BL register for display attribute (color)
+    mov     cx, str1_awaits_len2 ; Set CX register to str1_awaits_len2 (length of the string)
 
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 1301h       ; Set up AH for BIOS video scroll function
+    int     10h             ; Call BIOS interrupt 10h to print "N = "
 
     ; read user input (n)
 
-    call    read_input
+    call    read_input      ; Call function to read user input
 
     ; convert ascii read to an integer
 
-    mov     di, nhts
-    mov     si, storage_buffer
-    call    atoi
+    mov     di, nhts        ; Set DI to point to nhts
+    mov     si, storage_buffer ; Set SI to point to storage_buffer
+    call    atoi            ; Convert ASCII characters to integer
 
     ; read data from floppy
 
-    mov     es, [address]
-    mov     bx, [address + 2]
+    mov     es, [address]  ; Set ES to the value stored at [address]
+    mov     bx, [address + 2] ; Set BX to the value stored at [address + 2]
 
-    mov     ah, 02h
-    mov     al, [nhts]
-    mov     ch, [nhts + 4]
-    mov     cl, [nhts + 6]
-    mov     dh, [nhts + 2]
-    mov     dl, 0
+    mov     ah, 02h        ; Set up AH for BIOS Read Sector
+    mov     al, [nhts]     ; Set AL to value at nhts
+    mov     ch, [nhts + 4] ; Set CH to value at nhts + 4
+    mov     cl, [nhts + 6] ; Set CL to value at nhts + 6
+    mov     dh, [nhts + 2] ; Set DH to value at nhts + 2
+    mov     dl, 0          ; Set DL to 0 (drive number)
 
-    int     13h
+    int     13h            ; Call BIOS interrupt 13h to read sectors
 
     ; print error code
     
@@ -235,10 +235,10 @@ option2:
 
     ; print the data read
 
-    call    get_cursor_pos
+    call    get_cursor_pos   ; Get cursor position
 
-    inc     dh
-    mov     dl, 0
+    inc     dh              ; Increment DH (row position)
+    mov     dl, 0           ; Set DL (column position) to 0
 
     mov     es, [address]
     mov     bp, [address + 2]
@@ -251,89 +251,89 @@ option2:
 
     ; call    paginated_output
 
-    jmp     _terminate
+    jmp     _terminate      ; Jump to _terminate label to end the program
 
 ; 2.3 BEGINNING
 
 option3:
     ; display the key read
 
-    mov     ah, 0eh
-    int     10h
+    mov     ah, 0eh       ; Set up AH register for BIOS teletype output
+    int     10h           ; Print the character in AL (previously read)
 
-    mov     al, 2eh
-    int     10h
+    mov     al, 2eh       ; Set AL register to ASCII character '.'
+    int     10h           ; Print the character
 
     ; read RAM address XXXX:YYYY "
 
-    call    read_ram_address
+    call    read_ram_address  ; Call function to read RAM address
 
     ; read HTS
 
-    call    read_hts_address
+    call    read_hts_address  ; Call function to read HTS address
 
     ; print "N = "
 
-    call    get_cursor_pos
+    call    get_cursor_pos    ; Get cursor position
 
-    inc     dh
-    mov     dl, 0
+    inc     dh              ; Increment DH (row position)
+    mov     dl, 0           ; Set DL (column position) to 0
 
-    mov     ax, 0
-    mov     es, ax
-    mov     si, in_awaits_str1
-    add     si, str1_awaits_len1
-    mov     bp, si
+    mov     ax, 0           ; Set AX register to 0
+    mov     es, ax          ; Set ES (Extra Segment) register to 0
+    mov     si, in_awaits_str1 ; Set SI to point to in_awaits_str1
+    add     si, str1_awaits_len1 ; Point SI to the end of in_awaits_str1
+    mov     bp, si          ; Set BP to point to the end of in_awaits_str1
 
-    mov     bl, 07h
-    mov     cx, str1_awaits_len2
+    mov     bl, 07h         ; Set BL register for display attribute (color)
+    mov     cx, str1_awaits_len2 ; Set CX register to str1_awaits_len2 (length of the string)
 
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 1301h       ; Set up AH for BIOS video scroll function
+    int     10h             ; Call BIOS interrupt 10h to print "N = "
 
     ; read user input (n)
 
-    call    read_input
+    call    read_input      ; Call function to read user input
 
     ; convert ascii read to an integer
 
-    mov     di, nhts
-    mov     si, storage_buffer
-    call    atoi
+    mov     di, nhts        ; Set DI to point to nhts
+    mov     si, storage_buffer ; Set SI to point to storage_buffer
+    call    atoi            ; Convert ASCII characters to integer
+    
+     ; print the data to write
 
-    ; print the data to write
+    call    get_cursor_pos  ; Call a routine to get the current cursor position
 
-    call    get_cursor_pos
+    inc     dh              ; Increment the value in DH (row position) to move the cursor down by one row
+    mov     dl, 0           ; Move the column position (DL) to the beginning (column 0)
 
-    inc     dh
-    mov     dl, 0
+    mov     es, [address]   ; Load the segment part of the memory address into ES
+    mov     bp, [address + 2] ; Load the offset part of the memory address into BP
 
-    mov     es, [address]
-    mov     bp, [address + 2]
+    mov     bl, 07h         ; Set the display attribute for the text to white on black background
+    mov     cx, [nhts]      ; Load the number of sectors to display from memory into CX
 
-    mov     bl, 07h
-    mov     cx, [nhts]
-
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 1301h       ; Set the video function number to write string at a specified position
+    int     10h             ; Call the BIOS video interrupt to execute the function specified in AX
 
     ; calculate the number of sectors to write
 
-    xor     dx, dx
-    mov     ax, [nhts]
-    mov     bx, 512
-    div     bx
+    xor     dx, dx          ; Clear DX register
+    mov     ax, [nhts]      ; Move value from nhts to AX
+    mov     bx, 512         ; Set BX to 512 (sector size)
+    div     bx              ; Divide AX by BX, quotient in AX, remainder in DX
 
     ; write data to floppy
 
-    mov     es, [address]
-    mov     bx, [address + 2]
+    mov     es, [address]  ; Set ES to the value stored at [address]
+    mov     bx, [address + 2] ; Set BX to the value stored at [address + 2]
 
-    mov     ah, 03h
-    inc     al
-    mov     ch, [nhts + 4]
-    mov     cl, [nhts + 6]
-    mov     dh, [nhts + 2]
+    mov     ah, 03h        ; Set up AH for BIOS Write Sector
+    inc     al             ; Increment AL
+    mov     ch, [nhts + 4] ; Set CH to value at nhts + 4
+    mov     cl, [nhts + 6] ; Set CL to value at nhts + 6
+    mov     dh, [nhts + 2] ; Set DH to value at nhts + 2
     mov     dl, 0
     int     13h
 
@@ -345,576 +345,587 @@ option3:
 ; Complex I/O subprocesses
 
 read_input:
-    mov     si, storage_buffer
-    call    get_cursor_pos
+    mov     si, storage_buffer  ; Set SI to point to the storage buffer
+    call    get_cursor_pos      ; Get the cursor position for typing
 
-    typing:
-        mov     ah, 00h
-        int     16h
+typing:
+    mov     ah, 00h            ; Read a key from the keyboard
+    int     16h                ; BIOS interrupt for keyboard input
 
-        cmp     al, 08h
-	    je      hdl_backspace
+    cmp     al, 08h            ; Check if Backspace key is pressed
+    je      hdl_backspace      ; If Backspace, jump to handle backspace
 
-	    cmp     al, 0dh
-	    je      hdl_enter
+    cmp     al, 0dh            ; Check if Enter key is pressed
+    je      hdl_enter          ; If Enter, jump to handle enter
 
-        cmp     si, storage_buffer + 256
-        je      typing
+    cmp     si, storage_buffer + 256  ; Check if the buffer is full
+    je      typing             ; If full, continue typing
 
-        mov     [si], al
-	    inc     si
+    mov     [si], al           ; Store the character in the buffer
+    inc     si                 ; Move to the next position in the buffer
 
-        mov     ah, 0eh
-	    int     10h
+    mov     ah, 0eh            ; Print the character just typed
+    int     10h                ; BIOS interrupt for screen output
+    jmp     typing             ; Continue typing
 
-	    jmp     typing
+hdl_backspace:
+    cmp     si, storage_buffer ; Check if the buffer is empty
+    je      typing             ; If empty, continue typing
 
-    hdl_backspace:
-	    cmp     si, storage_buffer
-	    je      typing
+    dec     si                 ; Move back in the buffer
+    mov     byte [si], 0      ; Erase the character
 
-	    dec     si
-    	mov     byte [si], 0
+    call    get_cursor_pos     ; Get the cursor position
 
-        call    get_cursor_pos
+    cmp     dl, 0              ; Check if at the start of a line
+    je      prev_line          ; If at the start, jump to previous line
 
-	    cmp     dl, 0
-        je      prev_line
+    mov     ah, 02h            ; Move the cursor back by one position
+    dec     dl
+    int     10h                ; BIOS interrupt for cursor movement
 
-        mov     ah, 02h
-        dec     dl
-        int     10h
+    mov     ah, 0ah            ; Print a space to erase the character
+    mov     al, 20h
+    int     10h                ; BIOS interrupt for screen output
 
-        mov     ah, 0ah
-        mov     al, 20h
-        int     10h
+    jmp     typing             ; Continue typing
 
-	    jmp     typing
+prev_line:
+    mov     ah, 02h            ; Move to the previous line
+    dec     dh
+    mov     dl, 79             ; Move to the last column
+    int     10h                ; BIOS interrupt for cursor movement
 
-    prev_line:
-        mov     ah, 02h
-        dec     dh
-        mov     dl, 79
-        int     10h
+    mov     ah, 0ah            ; Print a space to erase the character
+    mov     al, 20h
+    int     10h                ; BIOS interrupt for screen output
 
-        mov     ah, 0ah
-        mov     al, 20h
-        int     10h
-    
-        jmp     typing
+    jmp     typing             ; Continue typing
 
-    hdl_enter:
-        cmp     si, storage_buffer
-        je      typing
+hdl_enter:
+    cmp     si, storage_buffer ; Check if the buffer is empty
+    je      typing             ; If empty, continue typing
 
-        mov     byte [si], 0
+    mov     byte [si], 0       ; Null-terminate the buffer
 
-        ret
+    ret                         ; Return from the subroutine
 
 ; paginated output for 2.2
 
 paginated_output:
-    mov     es, [address]
-    mov     bp, [address + 2]
+    mov     es, [address]       ; Set ES to the value at [address]
+    mov     bp, [address + 2]   ; Set BP to the value at [address + 2]
 
-    mov     ax, [nhts]
-    mov     cx, 512
+    mov     ax, [nhts]          ; Move value from nhts to AX
+    mov     cx, 512             ; Set CX to 512 (sector size)
 
-    imul    ax, cx
-    mov     [pag_output_len], ax
+    imul    ax, cx              ; Multiply AX by CX and store in pag_output_len
+    mov     [pag_output_len], ax ; Store the result in pag_output_len
 
-    xor     cx, cx
+    xor     cx, cx              ; Clear CX register
 
-    paginated_output_loop:     
+paginated_output_loop:
         ; advance page
 
-        inc     word [page_num]
+        inc     word [page_num] ; Increment the value at page_num
 
-        mov     ah, 05h
-        mov     al, [page_num]
-        int     10h
+        mov     ah, 05h         ; Set AH for BIOS set active page
+        mov     al, [page_num]  ; Set AL with the page number
+        int     10h             ; Call BIOS interrupt 10h to set active page
 
-        ; print 80*25 = 2000 char-s from the data read
+        ; print 80*25 = 2000 characters from the data read
 
-        mov     bh, [page_num]
-        mov     dh, 0
-        mov     dl, 0
+        mov     bh, [page_num]  ; Set BH with the page number
+        mov     dh, 0           ; Set DH to 0 (row)
+        mov     dl, 0           ; Set DL to 0 (column)
 
-        push    cx
+        push    cx              ; Preserve CX register value
 
-        mov     bl, 07h
-        mov     cx, 2000
+        mov     bl, 07h         ; Set BL for display attribute (color)
+        mov     cx, 2000        ; Set CX to 2000 characters to print
 
-        mov     ax, 1301h
-        int     10h
+        mov     ax, 1301h       ; Set up AH for BIOS video scroll function
+        int     10h             ; Call BIOS interrupt 10h to print characters
 
         ; advance pointers and counters
 
-        pop     cx
-        add     cx, 2000
-        add     bp, 2000
+        pop     cx              ; Restore CX register value
+        add     cx, 2000        ; Increment CX by 2000
+        add     bp, 2000        ; Increment BP by 2000
+
+        ; wait for page advance signal (spacebar press)
 
         wait_for_page_advance_signal:
-            mov     ah, 00h
-            int     16h
+            mov     ah, 00h     ; Read a key from the keyboard
+            int     16h         ; BIOS interrupt for keyboard input
 
-            cmp     al, 20h
-            jne     wait_for_page_advance_signal
+            cmp     al, 20h     ; Compare with ASCII space character
+            jne     wait_for_page_advance_signal ; If not space, continue waiting
 
-        cmp     cx, [pag_output_len]
-        jl      paginated_output_loop
+        cmp     cx, [pag_output_len]  ; Compare CX with pag_output_len
+        jl      paginated_output_loop ; If less, continue paginated output
 
-        ret
+        ret                         ; Return from the subroutine
 
 ; In. number conversions
 
 atoi:
     atoi_conv_loop:
-        cmp     byte [si], 0
-        je      atoi_conv_done
+        cmp     byte [si], 0   ; Compare the byte at SI with 0
+        je      atoi_conv_done ; If it's null, jump to atoi_conv_done
 
-        xor     ax, ax
-        mov     al, [si]
-        sub     al, '0'
+        xor     ax, ax         ; Clear AX register
+        mov     al, [si]       ; Move byte at SI to AL
+        sub     al, '0'        ; Convert ASCII to integer by subtracting '0'
 
-        mov     bx, [di]
-        imul    bx, 10
-        add     bx, ax
-        mov     [di], bx
+        mov     bx, [di]       ; Move value at DI to BX
+        imul    bx, 10         ; Multiply BX by 10
+        add     bx, ax         ; Add the value in AX to BX
+        mov     [di], bx       ; Store the result in DI
 
-        inc     si
+        inc     si             ; Increment SI to point to the next character
 
-        jmp     atoi_conv_loop
+        jmp     atoi_conv_loop ; Jump to the beginning of the loop
 
     atoi_conv_done:
-        ret
+        ret                     ; Return from the subroutine
 
 atoh:
     atoh_conv_loop:
-        cmp     byte [si], 0
-        je      atoh_conv_done
+        cmp     byte [si], 0   ; Compare the byte at SI with 0
+        je      atoh_conv_done ; If it's null, jump to atoh_conv_done
 
-        xor     ax, ax
-        mov     al, [si]
-        cmp     al, 65
-        jl      conv_digit  
+        xor     ax, ax         ; Clear AX register
+        mov     al, [si]       ; Move byte at SI to AL
+        cmp     al, 65         ; Compare AL with ASCII 'A' (65)
+        jl      conv_digit     ; If less than 'A', jump to conv_digit
 
         conv_letter:
-            sub     al, 55
-            jmp     atoh_finish_iteration
+            sub     al, 55    ; Convert ASCII letter to hexadecimal value
+            jmp     atoh_finish_iteration ; Jump to atoh_finish_iteration
 
         conv_digit:
-            sub     al, 48
+            sub     al, 48    ; Convert ASCII digit to integer
 
         atoh_finish_iteration:
-            mov     bx, [di]
-            imul    bx, 16
-            add     bx, ax
-            mov     [di], bx
+            mov     bx, [di]  ; Move value at DI to BX
+            imul    bx, 16    ; Multiply BX by 16
+            add     bx, ax    ; Add the value in AX to BX
+            mov     [di], bx  ; Store the result in DI
 
-            inc     si
+            inc     si        ; Increment SI to point to the next character
 
-        jmp     atoh_conv_loop
+        jmp     atoh_conv_loop ; Jump to the beginning of the loop
 
     atoh_conv_done:
-        ret
+        ret                     ; Return from the subroutine
 
 ; With this subprocess, copy the string n times in a separate buffer to write on floppy
 
 fill_storage_buffer:
-    push    si
-    mov     cx, 0
+    push    si          ; Preserve SI register
+    mov     cx, 0       ; Initialize CX register to 0
 
+    ; Find the end of the string in SI
     find_end:
-        cmp     byte [si], 0
-        je      end_found
+        cmp     byte [si], 0  ; Compare the byte at SI with 0
+        je      end_found     ; If it's null, jump to end_found
 
-        inc     si
-        inc     cx
+        inc     si            ; Move to the next character
+        inc     cx            ; Increment CX (string length)
 
-        jmp     find_end
+        jmp     find_end      ; Continue searching for the end of the string
 
     end_found:
-        pop     si
-        mov     di, storage_buffer
+        pop     si            ; Restore SI register
+        mov     di, storage_buffer  ; Set DI to point to storage_buffer
 
+    ; Copy string from SI to DI (storage_buffer)
     copy_string_to_buffer_loop:
-        push    cx
-        push    si
-        rep     movsb
+        push    cx            ; Preserve CX
+        push    si            ; Preserve SI
 
-        pop     si
-        pop     cx
+        rep     movsb         ; Move string from SI to DI
 
-        dec     word [nhts]
-        add     word [storage_curr_size], cx
+        pop     si            ; Restore SI
+        pop     cx            ; Restore CX
 
-        cmp     word [nhts], 0
-        jg      copy_string_to_buffer_loop
+        dec     word [nhts]  ; Decrement word at nhts (number of characters)
+        add     word [storage_curr_size], cx  ; Add CX to storage_curr_size
 
-    push    di
-    sub     di, storage_buffer
-    mov     ax, di
-    pop     di
+        cmp     word [nhts], 0  ; Compare word at nhts with 0
+        jg      copy_string_to_buffer_loop  ; If greater, continue copying
 
-    xor     dx, dx
-    mov     bx, 512
-    div     bx
+    ; Calculate padding with null characters to align to sector size
+    push    di                 ; Preserve DI
+    sub     di, storage_buffer ; Calculate the offset between DI and storage_buffer
+    mov     ax, di             ; Move DI offset to AX
+    pop     di                 ; Restore DI
+
+    xor     dx, dx             ; Clear DX register
+    mov     bx, 512            ; Set BX to 512 (sector size)
+    div     bx                 ; Divide AX by BX (calculate number of sectors)
     
-    mov     cx, 0
+    mov     cx, 0              ; Initialize CX to 0
 
+    ; Fill the remaining space with null characters to align to sector size
     nulls:
-        mov     byte [edi], 0
-        
-        inc     di
-        inc     cx
+        mov     byte [edi], 0  ; Store null character at DI
 
-        cmp     cx, dx
-        jl      nulls
+        inc     di             ; Move to the next position
+        inc     cx             ; Increment CX
+
+        cmp     cx, dx         ; Compare CX with DX (number of sectors)
+        jl      nulls          ; If less, continue filling with nulls
 
     return:
-        ret
+        ret                    ; Return from the subroutine
 
 ; Useful stuff
 
 break_line:
-    call    get_cursor_pos
+    call    get_cursor_pos     ; Call subroutine to get cursor position
 
-    inc     dh
-    mov     dl, 0
+    inc     dh                 ; Increment DH (move to the next line)
+    mov     dl, 0              ; Move cursor to the start of the line
 
-    mov     ax, 0
-    mov     es, ax
-    mov     bp, prompt_start
+    mov     ax, 0              ; Clear AX register
+    mov     es, ax             ; Set ES to 0 (video memory segment)
+    mov     bp, prompt_start   ; Set BP to the prompt_start address (string)
 
-    mov     bl, 07h
-    mov     cx, 0
+    mov     bl, 07h            ; Set BL for display attribute (color)
+    mov     cx, 0              ; Set CX to 0 (to display the entire string)
 
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 1301h          ; Set up AH for BIOS video scroll function
+    int     10h                ; Call BIOS interrupt 10h to print the prompt
 
-    ret
+    ret                         ; Return from the subroutine
 
 break_line_with_prompt:
-    call    get_cursor_pos
+    call    get_cursor_pos     ; Call subroutine to get cursor position
 
-    inc     dh
-    mov     dl, 0
+    inc     dh                 ; Increment DH (move to the next line)
+    mov     dl, 0              ; Move cursor to the start of the line
 
-    mov     ax, 0
-    mov     es, ax
-    mov     bp, prompt_start
+    mov     ax, 0              ; Clear AX register
+    mov     es, ax             ; Set ES to 0 (video memory segment)
+    mov     bp, prompt_start   ; Set BP to the prompt_start address (string)
 
-    mov     bl, 07h
-    mov     cx, prompt_start_len
+    mov     bl, 07h            ; Set BL for display attribute (color)
+    mov     cx, prompt_start_len ; Set CX to prompt_start_len (length of prompt)
 
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 1301h          ; Set up AH for BIOS video scroll function
+    int     10h                ; Call BIOS interrupt 10h to print the prompt
 
-    ret
+    ret                         ; Return from the subroutine
 
 get_cursor_pos:
-    mov     ah, 03h
-    mov     bh, [page_num]
-    int     10h
+    mov     ah, 03h            ; Set AH for BIOS video services - get cursor position
+    mov     bh, [page_num]     ; Set BH with the page number
+    int     10h                ; Call BIOS interrupt 10h to get cursor position
 
-    ret
+    ret                         ; Return from the subroutine
 
 display_error_code:
-    push    ax
+    push    ax                  ; Push the value of AX register onto the stack
 
-    call    get_cursor_pos
+    call    get_cursor_pos      ; Call a function to get the cursor position
 
-    inc     dh
-    mov     dl, 0
+    inc     dh                  ; Increment DH (move cursor down one row)
+    mov     dl, 0               ; Move cursor to the beginning of the line
 
-    mov     ax, 0
-    mov     es, ax
-    mov     bp, err_code_msg
+    mov     ax, 0               ; Clear AX register
+    mov     es, ax              ; Set ES register to 0 (segment address)
+    mov     bp, err_code_msg    ; Set BP to point to the error code message
 
-    mov     bl, 07h
-    mov     cx, err_code_msg_len
+    mov     bl, 07h             ; Set BL to 07h (text attribute color)
+    mov     cx, err_code_msg_len; Set CX to the length of the error code message
 
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 1301h           ; AH = 13h (write string), AL = 01h (to cursor)
+    int     10h                 ; Video Services - Write String at Cursor
 
-    pop     ax
+    pop     ax                  ; Restore the value of AX from the stack
 
-    mov     al, '0'
-    add     al, ah
-    mov     ah, 0eh
-    int     10h
+    mov     al, '0'             ; Convert the error code to ASCII character
+    add     al, ah              ; Add the error code to '0' to get its ASCII value
+    mov     ah, 0eh             ; Set AH register for BIOS teletype
+    int     10h                 ; Invoke BIOS interrupt to display the error code character
 
-    ret
+    ret                         ; Return from the subroutine
 
 ; Addresses reading subprocesses
 
 read_ram_address:
     ; print "SEGMENT (XXXX) = "
+    call    get_cursor_pos    ; Call subroutine to get cursor position
 
-    call    get_cursor_pos
+    inc     dh                ; Increment DH (move to the next line)
+    mov     dl, 0             ; Move cursor to the start of the line
 
-    inc     dh
-    mov     dl, 0
+    mov     ax, 0             ; Clear AX register
+    mov     es, ax            ; Set ES to 0 (video memory segment)
+    mov     bp, in_awaits_str2 ; Set BP to the in_awaits_str2 address (string)
 
-    mov     ax, 0
-    mov     es, ax
-    mov     bp, in_awaits_str2
+    mov     bl, 07h           ; Set BL for display attribute (color)
+    mov     cx, str2_awaits_len1 ; Set CX to str2_awaits_len1 (length of the string)
 
-    mov     bl, 07h
-    mov     cx, str2_awaits_len1
-
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 1301h         ; Set up AH for BIOS video scroll function
+    int     10h               ; Call BIOS interrupt 10h to print the prompt
 
     ; read user input (segment)
-
-    call    read_input
+    call    read_input        ; Call subroutine to read user input
 
     ; convert ascii read to a hex
-
-    mov     di, address
-    mov     si, storage_buffer
-    call    atoh
+    mov     di, address       ; Set DI to address (for segment)
+    mov     si, storage_buffer ; Set SI to storage_buffer (user input)
+    call    atoh              ; Convert ASCII input to hexadecimal
 
     ; print "OFFSET (YYYY) = "
+    call    get_cursor_pos    ; Call subroutine to get cursor position
 
-    call    get_cursor_pos
+    inc     dh                ; Increment DH (move to the next line)
+    mov     dl, 0             ; Move cursor to the start of the line
 
-    inc     dh
-    mov     dl, 0
+    mov     ax, 0             ; Clear AX register
+    mov     es, ax            ; Set ES to 0 (video memory segment)
+    mov     si, in_awaits_str2 ; Set SI to the in_awaits_str2 address (string)
+    add     si, str2_awaits_len1 ; Add the length of the first prompt to SI
+    mov     bp, si            ; Set BP to the updated SI position (string)
 
-    mov     ax, 0
-    mov     es, ax
-    mov     si, in_awaits_str2
-    add     si, str2_awaits_len1
-    mov     bp, si
+    mov     bl, 07h           ; Set BL for display attribute (color)
+    mov     cx, str2_awaits_len2 ; Set CX to str2_awaits_len2 (length of the string)
 
-    mov     bl, 07h
-    mov     cx, str2_awaits_len2
-
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 1301h         ; Set up AH for BIOS video scroll function
+    int     10h               ; Call BIOS interrupt 10h to print the prompt
 
     ; read user input (offset)
-
-    call    read_input
+    call    read_input        ; Call subroutine to read user input
 
     ; convert ascii read to a hex
+    mov     di, address + 2   ; Set DI to address + 2 (for offset)
+    mov     si, storage_buffer ; Set SI to storage_buffer (user input)
+    call    atoh              ; Convert ASCII input to hexadecimal
 
-    mov     di, address + 2
-    mov     si, storage_buffer
-    call    atoh
-
-    ret
+    ret                        ; Return from the subroutine
 
 read_hts_address:
     ; print "{H, T, S} (one value per line):"
+    call    get_cursor_pos     ; Call subroutine to get cursor position
 
-    call    get_cursor_pos
+    inc     dh                 ; Increment DH (move to the next line)
+    mov     dl, 0              ; Move cursor to the start of the line
 
-    inc     dh
-    mov     dl, 0
+    mov     ax, 0              ; Clear AX register
+    mov     es, ax             ; Set ES to 0 (video memory segment)
+    mov     si, in_awaits_str1 ; Set SI to in_awaits_str1 address (string)
+    add     si, str1_awaits_len1 ; Add length of first prompt
+    add     si, str1_awaits_len2 ; Add length of second prompt
+    mov     bp, si             ; Set BP to the updated SI position (string)
 
-    mov     ax, 0
-    mov     es, ax
-    mov     si, in_awaits_str1
-    add     si, str1_awaits_len1
-    add     si, str1_awaits_len2
-    mov     bp, si
+    mov     bl, 07h            ; Set BL for display attribute (color)
+    mov     cx, str1_awaits_len3 ; Set CX to str1_awaits_len3 (length of the string)
 
-    mov     bl, 07h
-    mov     cx, str1_awaits_len3
-
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 1301h          ; Set up AH for BIOS video scroll function
+    int     10h                ; Call BIOS interrupt 10h to print the prompt
 
     ; read user input (h)
-
-    call    break_line_with_prompt
-    call    read_input
+    call    break_line_with_prompt ; Call subroutine to move cursor and print prompt
+    call    read_input         ; Call subroutine to read user input
 
     ; convert ascii read to an integer
-
-    mov     di, nhts + 2
-    mov     si, storage_buffer
-    call    atoi
+    mov     di, nhts + 2       ; Set DI to nhts + 2 (for 'H')
+    mov     si, storage_buffer ; Set SI to storage_buffer (user input)
+    call    atoi               ; Convert ASCII input to an integer
 
     ; read user input (t)
-
-    call    break_line_with_prompt
-    call    read_input
+    call    break_line_with_prompt ; Move cursor and print the prompt
+    call    read_input         ; Read user input
 
     ; convert ascii read to an integer
-
-    mov     di, nhts + 4
-    mov     si, storage_buffer
-    call    atoi
+    mov     di, nhts + 4       ; Set DI to nhts + 4 (for 'T')
+    mov     si, storage_buffer ; Set SI to storage_buffer (user input)
+    call    atoi               ; Convert ASCII input to an integer
 
     ; read user input (s)
-
-    call    break_line_with_prompt
-    call    read_input
+    call    break_line_with_prompt ; Move cursor and print the prompt
+    call    read_input         ; Read user input
 
     ; convert ascii read to an integer
+    mov     di, nhts + 6       ; Set DI to nhts + 6 (for 'S')
+    mov     si, storage_buffer ; Set SI to storage_buffer (user input)
+    call    atoi               ; Convert ASCII input to an integer
 
-    mov     di, nhts + 6
-    mov     si, storage_buffer
-    call    atoi
-
-    ret
+    ret                         ; Return from the subroutine
 
 ; Trailer subprocesses
 
 _error:
-    call    get_cursor_pos
-    call    break_line
+    call    get_cursor_pos   ; Get cursor position
+    call    break_line      ; Move cursor to the next line
 
-    push    52h
+    push    52h             ; Push ASCII values onto the stack ('R', 'R', 'E')
     push    52h
     push    45h
-    mov     cx, 3
+    mov     cx, 3           ; Set CX to 3 (number of characters to print)
 
     print_err_loop:
-        mov     ah, 0eh
-        pop     bx
-        mov     al, bl
-        int     10h
+        mov     ah, 0eh     ; Set AH for BIOS teletype function
+        pop     bx          ; Pop the ASCII value from the stack into BX
+        mov     al, bl      ; Move ASCII value to AL
+        int     10h         ; Display character at cursor position
 
-        dec     cx
-        jnz     print_err_loop
+        dec     cx          ; Decrement CX (loop counter)
+        jnz     print_err_loop  ; Jump if CX is not zero to continue printing characters
 
-    jmp _terminate
+    jmp _terminate          ; Jump to _terminate label
 
 _terminate:
     wait_for_confirm:
-        mov     ah, 00h
-        int     16h
+        mov     ah, 00h     ; Set AH for BIOS keyboard input function
+        int     16h         ; Wait for keypress
 
-        cmp     al, 0dh
-        jne     wait_for_confirm
+        cmp     al, 0dh     ; Compare the entered key with carriage return (Enter key)
+        jne     wait_for_confirm  ; If not Enter, wait for another keypress
 
-    inc     word [page_num]
+    inc     word [page_num] ; Increment the value at page_num address
 
-    mov     ah, 05h
-    mov     al, [page_num]
-    int     10h
+    mov     ah, 05h        ; Set AH for BIOS function to move cursor
+    mov     al, [page_num] ; Move current page number to AL
+    int     10h            ; Call BIOS interrupt for scrolling
 
-    jmp     _start
+    jmp     _start         ; Jump to the _start label to restart the program
 
 ; Debug subprocesses
 
 conv_check:
-    mov     ah, 0eh
-    mov     al, 20h
-    int     10h
+    ; Print space character
+    mov     ah, 0eh    ; Set AH register to 0eh (function code for BIOS teletype)
+    mov     al, 20h    ; Set AL register to 20h (ASCII code for space character)
+    int     10h       ; Invoke BIOS interrupt to print the space character
 
-    mov     ah, 0eh
-    mov     al, 3eh
-    int     10h
+    ; Print '>'
+    mov     ah, 0eh    ; Set AH register to 0eh (function code for BIOS teletype)
+    mov     al, 3eh    ; Set AL register to 3eh (ASCII code for '>') character
+    int     10h       ; Invoke BIOS interrupt to print the '>' character
 
-    mov     ah, 0eh
-    mov     al, 3eh
-    int     10h
+    ; Print '>'
+    mov     ah, 0eh    ; Set AH register to 0eh (function code for BIOS teletype)
+    mov     al, 3eh    ; Set AL register to 3eh (ASCII code for '>') character
+    int     10h       ; Invoke BIOS interrupt to print the '>' character
 
-    mov     ah, 0eh
-    mov     al, 20h
-    int     10h
+    ; Print space character
+    mov     ah, 0eh    ; Set AH register to 0eh (function code for BIOS teletype)
+    mov     al, 20h    ; Set AL register to 20h (ASCII code for space character)
+    int     10h       ; Invoke BIOS interrupt to print the space character
 
-    mov     ax, [di]
-    mov     bx, [test_result]
+    ; Compare values in memory
+    mov     ax, [di]        ; Load the value at address DI into AX register
+    mov     bx, [test_result] ; Load the value at memory location test_result into BX register
 
-    xor     ax, bx
-    jnz     incorrect
+    xor     ax, bx          ; Perform an XOR operation between AX and BX
+    jnz     incorrect       ; Jump to 'incorrect' label if the result is not zero (values are different)
 
-    correct:
-        mov     ah, 0eh
-        mov     al, 53h
-        int     10h
+correct:
+    ; Print 'S'
+    mov     ah, 0eh    ; Set AH register to 0eh (function code for BIOS teletype)
+    mov     al, 53h    ; Set AL register to 53h (ASCII code for 'S')
+    int     10h       ; Invoke BIOS interrupt to print the 'S' character
 
-        jmp     check_end
+    jmp     check_end       ; Unconditional jump to the 'check_end' label
 
-    incorrect:
-        mov     ah, 0eh
-        mov     al, 45h
-        int     10h
+incorrect:
+    ; Print 'E'
+    mov     ah, 0eh    ; Set AH register to 0eh (function code for BIOS teletype)
+    mov     al, 45h    ; Set AL register to 45h (ASCII code for 'E')
+    int     10h       ; Invoke BIOS interrupt to print the 'E' character
 
-    check_end:
-        ret
- 
+check_end:
+    ret                     ; Return from the subroutine
+
 print_buff:
-    push    si
-    mov     cx, 0
+    push    si              ; Preserve SI register
 
-    find_buffer_end:
-        cmp     byte [si], 0
-        je      buffer_end_found
+    mov     cx, 0           ; Initialize CX to 0 (counter)
 
-        inc     si
-        inc     cx
+find_buffer_end:
+    cmp     byte [si], 0    ; Compare byte in memory pointed by SI to check for end of buffer
+    je      buffer_end_found ; If it's the end of buffer (null termination), jump to buffer_end_found
 
-        jmp     find_buffer_end
+    inc     si              ; Move to the next byte in the buffer
+    inc     cx              ; Increment the counter (CX) for each character
 
-    buffer_end_found:
-        pop     si
-        push    cx
+    jmp     find_buffer_end ; Repeat loop to check for end of buffer
 
-    call    get_cursor_pos
+buffer_end_found:
+    pop     si              ; Restore SI register
+    push    cx              ; Preserve CX register
 
-    inc     dh
-    mov     dl, 0
- 
-	mov     ax, 0
-    mov     es, ax
-    mov     bp, si
+    call    get_cursor_pos  ; Get the current cursor position
 
-    mov     bl, 07h
-    pop     cx
+    inc     dh              ; Increment DH to move the cursor down by one row
+    mov     dl, 0           ; Set DL to the start of the line (column 0)
 
-    mov     ax, 1301h
-    int     10h
+    mov     ax, 0           ; Clear AX register
+    mov     es, ax          ; Load ES with 0
+    mov     bp, si          ; Point BP to the current location in the buffer (SI)
 
-    ret
+    mov     bl, 07h         ; Set the display attribute for the text to white on black background
+    pop     cx              ; Restore CX (counter)
+
+    mov     ax, 1301h       ; Set the video function number to write string at a specified position
+    int     10h             ; Call the BIOS video interrupt to execute the function specified in AX
+
+    ret                     ; Return from the subroutine
 
 ; Data declaration and initialization
 
 reset_memory:
+    ; Initialize pag_output_len to 0
     mov     word [pag_output_len], 0
 
+    ; Reset disk system - (BIOS Interrupt 13h - Reset Disk System)
     mov     ah, 00h
     int     13h
 
+    ; Reset various buffers and memory spaces
     mov     si, storage_buffer
     mov     di, storage_buffer + 512
-    call    clear_buffer
+    call    clear_buffer      ; Call subroutine to clear the buffer
 
+    ; Clear 'string' buffer
     mov     si, string
     mov     di, string + 256
-    call    clear_buffer
+    call    clear_buffer      ; Call subroutine to clear the buffer
 
+    ; Clear 'nhts' buffer
     mov     si, nhts
     mov     di, nhts + 8
-    call    clear_buffer
+    call    clear_buffer      ; Call subroutine to clear the buffer
 
+    ; Clear 'address' buffer
     mov     si, address
     mov     di, address + 4
-    call    clear_buffer
+    call    clear_buffer      ; Call subroutine to clear the buffer
 
+    ; Clear 'pag_output_len' buffer
     mov     si, pag_output_len
     mov     di, pag_output_len + 4
-    call    clear_buffer
+    call    clear_buffer      ; Call subroutine to clear the buffer
 
+    ; Reset 'storage_curr_size' buffer
     mov     si, storage_curr_size
     mov     di, storage_curr_size + 4
-    call    clear_buffer
+    call    clear_buffer     ; Call subroutine to reset the buffer
 
+    ; Reset 'storage_buffer' buffer
     mov     si, storage_buffer
     mov     di, storage_buffer + 1
-    call    clear_buffer
+    call    clear_buffer     ; Call subroutine to reset the buffer
 
-    call    reset_registers
+    ; Reset CPU registers
+    call    reset_registers   ; Call subroutine to reset CPU registers
 
-    ret
+    ret                       ; Return from the subroutine
 
 reset_registers:
     xor     ax, ax
